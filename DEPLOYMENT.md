@@ -207,6 +207,13 @@ wrangler logout
 wrangler login
 ```
 
+### Issue: Application stuck on "Initializing AI model and particles..."
+**Solution**: This issue has been fixed. The worker now properly serves the complete HTML with all inline JavaScript and CSS. Make sure you have the latest version and redeploy:
+```bash
+git pull
+npm run deploy
+```
+
 ### 问题: 命令未找到: wrangler
 **解决方案**: 确保全局安装了 wrangler：
 ```bash
@@ -219,6 +226,41 @@ npm install -g wrangler
 wrangler logout
 wrangler login
 ```
+
+### 问题: 应用一直显示"正在初始化 AI 模型与高性能粒子..."
+**解决方案**: 此问题已修复。Worker 现在正确地提供包含所有内联 JavaScript 和 CSS 的完整 HTML。请确保您使用最新版本并重新部署：
+```bash
+git pull
+npm run deploy
+```
+
+---
+
+## Technical Notes | 技术说明
+
+### Worker Structure | Worker 架构
+
+The Cloudflare Worker (`src/worker.js`) embeds the complete `index.html` file with all CSS and JavaScript inline. This approach:
+
+- **Avoids module import issues**: All code runs in a single scope without ES6 module complications
+- **Simplifies deployment**: Only one file needs to be served
+- **Improves performance**: No additional requests for CSS/JS files
+- **Ensures compatibility**: Works perfectly with MediaPipe and Three.js external dependencies
+
+If you modify `index.html`, you can regenerate `src/worker.js` by running:
+
+```bash
+node -e "const fs=require('fs');const html=fs.readFileSync('index.html','utf8');fs.writeFileSync('src/worker.js',\`export default{async fetch(request,env,ctx){const url=new URL(request.url);if(url.pathname==='/'||url.pathname==='/index.html'){return new Response(indexHTML,{headers:{'Content-Type':'text/html;charset=UTF-8','Cache-Control':'public, max-age=3600'}});}return new Response('Not Found',{status:404});}};const indexHTML=\\\`\${html.replace(/\\\\/g,'\\\\\\\\').replace(/\\\`/g,'\\\\\\\`').replace(/\\\$/g,'\\\\\\\$')}\\\`;\`,\`utf8\`);"
+```
+
+Cloudflare Worker (`src/worker.js`) 嵌入了完整的 `index.html` 文件及其所有内联 CSS 和 JavaScript。这种方法：
+
+- **避免模块导入问题**: 所有代码在单一作用域中运行，无 ES6 模块复杂性
+- **简化部署**: 只需提供一个文件
+- **提升性能**: 无需额外的 CSS/JS 文件请求
+- **确保兼容性**: 完美兼容 MediaPipe 和 Three.js 外部依赖
+
+如果修改了 `index.html`，可以通过以下命令重新生成 `src/worker.js`。
 
 ---
 
