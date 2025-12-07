@@ -1021,10 +1021,11 @@ const videoElement = document.getElementById('input-video');
 const previewCanvas = document.getElementById('webcam-preview');
 const previewCtx = previewCanvas.getContext('2d');
 const loadingDiv = document.getElementById('loading');
+let currentInteractionFactor = 0;
 
 function initMediaPipe() {
     const hands = new Hands({
-        locateFile: (file) => \\\`https://cdn.jsdelivr.net/npm/@mediapipe/hands/\\\${file}\\\`
+        locateFile: (file) => \`https://cdn.jsdelivr.net/npm/@mediapipe/hands/\${file}\`
     });
     
     hands.setOptions({ 
@@ -1080,7 +1081,8 @@ function onHandsResults(results) {
             );
             factor = (distance - 0.1) * 5;
         }
-        setInteractionFactor(Math.max(0, Math.min(1, factor)));
+        currentInteractionFactor = Math.max(0, Math.min(1, factor));
+        setInteractionFactor(currentInteractionFactor);
         
         for (const landmarks of results.multiHandLandmarks) {
             for(const point of landmarks) {
@@ -1095,7 +1097,8 @@ function onHandsResults(results) {
             }
         }
     } else {
-        setInteractionFactor(interactionFactor * 0.92);
+        currentInteractionFactor *= 0.92;
+        setInteractionFactor(currentInteractionFactor);
     }
     previewCtx.restore();
 }
