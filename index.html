@@ -1,11 +1,36 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="zh-CN" id="app">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AI 手势控制炫彩粒子系统 v2</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title data-i18n="page-title">AI 手势控制炫彩粒子系统 v2</title>
     <style>
-        body { margin: 0; overflow: hidden; background-color: #000; font-family: 'Segoe UI', sans-serif; }
+        body { margin: 0; overflow: hidden; background-color: #000; font-family: 'Segoe UI', sans-serif; touch-action: none; }
+
+        /* Privacy Notice */
+        #privacy-notice {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0, 0, 0, 0.95); z-index: 1000;
+            display: flex; align-items: center; justify-content: center;
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        #privacy-notice.hidden { display: none; }
+        .privacy-content {
+            background: linear-gradient(135deg, rgba(10, 10, 20, 0.95), rgba(20, 10, 30, 0.95));
+            padding: 30px; border-radius: 16px;
+            border: 2px solid rgba(0, 243, 255, 0.3);
+            max-width: 500px; text-align: center;
+            box-shadow: 0 0 40px rgba(0, 243, 255, 0.2);
+        }
+        .privacy-content h3 { color: #00f3ff; margin: 0 0 20px 0; font-size: 24px; }
+        .privacy-content p { color: #ccc; line-height: 1.8; margin: 0 0 25px 0; font-size: 16px; }
+        #privacy-accept {
+            background: linear-gradient(45deg, #00f3ff, #ff0055);
+            border: none; padding: 12px 40px; color: white;
+            border-radius: 8px; cursor: pointer; font-weight: bold;
+            font-size: 16px; transition: transform 0.2s;
+        }
+        #privacy-accept:hover { transform: scale(1.05); }
         
         /* UI 面板 */
         #ui-container {
@@ -17,9 +42,26 @@
             border: 1px solid rgba(0, 243, 255, 0.2);
             color: white; width: 240px;
             box-shadow: 0 0 20px rgba(0, 243, 255, 0.1);
+            transition: transform 0.3s ease;
         }
 
-        h2 { margin: 0 0 15px 0; font-size: 16px; text-transform: uppercase; letter-spacing: 2px; color: #00f3ff; text-align: center;}
+        .header-row {
+            display: flex; align-items: center; justify-content: space-between;
+            margin-bottom: 15px;
+        }
+
+        h2 { margin: 0; font-size: 16px; text-transform: uppercase; letter-spacing: 2px; color: #00f3ff; flex: 1; }
+        
+        .icon-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: white; padding: 6px 10px;
+            border-radius: 6px; cursor: pointer;
+            font-size: 14px; transition: all 0.2s;
+            margin-left: 8px;
+        }
+        .icon-btn:hover { background: rgba(0, 243, 255, 0.3); }
+        .mobile-only { display: none; }
         .control-group { margin-bottom: 18px; }
         label { display: block; margin-bottom: 8px; font-size: 12px; color: #aaa; font-weight: 600; }
 
@@ -63,45 +105,103 @@
             color: #00f3ff; font-size: 20px; z-index: 100; pointer-events: none;
             text-shadow: 0 0 10px #00f3ff;
         }
+
+        .help-text { margin-top: 12px; font-size: 10px; color: #888; line-height: 1.4; }
+
+        .privacy-info {
+            margin-top: 15px; padding-top: 10px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center; color: #888; font-size: 11px;
+        }
+
+        /* Mobile Responsive Styles */
+        @media (max-width: 768px) {
+            #ui-container {
+                top: 10px; left: 10px; right: 10px; width: auto;
+                max-height: 80vh; overflow-y: auto; padding: 15px;
+            }
+            #ui-container.collapsed { transform: translateY(calc(-100% + 50px)); }
+            .mobile-only { display: inline-block; }
+            .btn-grid { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+            button.shape-btn { padding: 8px 4px; font-size: 9px; }
+            button.shape-btn span { font-size: 18px; }
+            #webcam-preview { width: 80px; height: 60px; bottom: 10px; right: 10px; }
+            #loading { font-size: 16px; max-width: 80%; text-align: center; }
+            h2 { font-size: 14px; }
+            .privacy-content { padding: 20px; margin: 20px; max-width: 90%; }
+            .privacy-content h3 { font-size: 20px; }
+            .privacy-content p { font-size: 14px; }
+        }
+
+        @media (max-width: 480px) {
+            #ui-container { padding: 12px; }
+            .btn-grid { gap: 6px; }
+            button.shape-btn { padding: 6px 2px; font-size: 8px; }
+            h2 { font-size: 12px; letter-spacing: 1px; }
+        }
+
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
     </style>
 </head>
 <body>
 
-    <div id="loading">正在初始化 AI 模型与高性能粒子...</div>
+    <div id="loading" data-i18n="loading">正在初始化 AI 模型与高性能粒子...</div>
+
+    <!-- Privacy Notice -->
+    <div id="privacy-notice">
+        <div class="privacy-content">
+            <h3>🔒 <span data-i18n="privacy-title">隐私声明</span></h3>
+            <p data-i18n="privacy-text">
+                此应用完全在您的浏览器本地运行，不会上传任何数据到服务器。
+                摄像头数据仅用于本地手势识别，不会被记录或传输。
+            </p>
+            <button id="privacy-accept" data-i18n="privacy-accept">我知道了</button>
+        </div>
+    </div>
 
     <div id="ui-container">
-        <h2>星云控制台</h2>
+        <div class="header-row">
+            <h2 data-i18n="control-title">星云控制台</h2>
+            <button id="lang-toggle" class="icon-btn" title="Switch Language">🌐</button>
+            <button id="menu-toggle" class="icon-btn mobile-only">☰</button>
+        </div>
         
         <div class="control-group">
-            <label>形态选择 (SHAPE)</label>
+            <label data-i18n="shape-label">形态选择 (SHAPE)</label>
             <div class="btn-grid">
-                <button class="shape-btn active" data-shape="galaxy"><span>🌌</span>银河</button>
-                <button class="shape-btn" data-shape="helix"><span>🧬</span>DNA</button>
-                <button class="shape-btn" data-shape="torus"><span>🍩</span>环结</button>
-                <button class="shape-btn" data-shape="heart"><span>❤</span>爱心</button>
-                <button class="shape-btn" data-shape="saturn"><span>🪐</span>土星</button>
-                <button class="shape-btn" data-shape="cube"><span>🧊</span>矩阵</button>
-                <button class="shape-btn" data-shape="flower"><span>🌸</span>花朵</button>
-                <button class="shape-btn" data-shape="fireworks"><span>🎆</span>烟花</button>
-                <button class="shape-btn" data-shape="sphere"><span>🔵</span>球体</button>
+                <button class="shape-btn active" data-shape="galaxy"><span>🌌</span><span data-i18n="shape-galaxy">银河</span></button>
+                <button class="shape-btn" data-shape="helix"><span>🧬</span><span data-i18n="shape-helix">DNA</span></button>
+                <button class="shape-btn" data-shape="torus"><span>🍩</span><span data-i18n="shape-torus">环结</span></button>
+                <button class="shape-btn" data-shape="heart"><span>❤</span><span data-i18n="shape-heart">爱心</span></button>
+                <button class="shape-btn" data-shape="saturn"><span>🪐</span><span data-i18n="shape-saturn">土星</span></button>
+                <button class="shape-btn" data-shape="cube"><span>🧊</span><span data-i18n="shape-cube">矩阵</span></button>
+                <button class="shape-btn" data-shape="flower"><span>🌸</span><span data-i18n="shape-flower">花朵</span></button>
+                <button class="shape-btn" data-shape="fireworks"><span>🎆</span><span data-i18n="shape-fireworks">烟花</span></button>
+                <button class="shape-btn" data-shape="sphere"><span>🔵</span><span data-i18n="shape-sphere">球体</span></button>
             </div>
         </div>
 
         <div class="control-group">
-            <label>色彩主题 (COLOR SCHEME)</label>
+            <label data-i18n="color-label">色彩主题 (COLOR SCHEME)</label>
             <select id="color-scheme">
-                <option value="rainbow">🌈 幻彩霓虹 (Rainbow)</option>
-                <option value="cyberpunk">🤖 赛博朋克 (Cyberpunk)</option>
-                <option value="ocean">🌊 深海幽蓝 (Ocean)</option>
-                <option value="fire">🔥 烈焰熔岩 (Fire)</option>
-                <option value="forest">🌲 精灵森林 (Forest)</option>
+                <option value="rainbow" data-i18n="color-rainbow">🌈 幻彩霓虹 (Rainbow)</option>
+                <option value="cyberpunk" data-i18n="color-cyberpunk">🤖 赛博朋克 (Cyberpunk)</option>
+                <option value="ocean" data-i18n="color-ocean">🌊 深海幽蓝 (Ocean)</option>
+                <option value="fire" data-i18n="color-fire">🔥 烈焰熔岩 (Fire)</option>
+                <option value="forest" data-i18n="color-forest">🌲 精灵森林 (Forest)</option>
             </select>
         </div>
 
-        <button id="fullscreen-btn">⛶ 沉浸模式</button>
+        <button id="fullscreen-btn" data-i18n="fullscreen-btn">⛶ 沉浸模式</button>
         
-        <div style="margin-top:12px; font-size: 10px; color: #888; line-height: 1.4;">
-            <span style="color:#00f3ff">手势控制:</span> 张开双手拉远距离，或张开单手五指，控制粒子扩散。
+        <div class="help-text">
+            <span style="color:#00f3ff" data-i18n="gesture-control-label">手势控制:</span> 
+            <span data-i18n="gesture-control-text">张开双手拉远距离，或张开单手五指，控制粒子扩散。</span>
+        </div>
+
+        <!-- Privacy info in panel -->
+        <div class="privacy-info">
+            🔒 <span data-i18n="privacy-local">本地运行，无隐私泄露</span>
         </div>
     </div>
 
@@ -123,9 +223,146 @@
         import * as THREE from 'three';
         import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
+        // ===== INTERNATIONALIZATION (i18n) =====
+        const translations = {
+            'zh-CN': {
+                'page-title': 'AI 手势控制炫彩粒子系统 v2',
+                'loading': '正在初始化 AI 模型与高性能粒子...',
+                'privacy-title': '隐私声明',
+                'privacy-text': '此应用完全在您的浏览器本地运行，不会上传任何数据到服务器。摄像头数据仅用于本地手势识别，不会被记录或传输。',
+                'privacy-accept': '我知道了',
+                'privacy-local': '本地运行，无隐私泄露',
+                'control-title': '星云控制台',
+                'shape-label': '形态选择 (SHAPE)',
+                'shape-galaxy': '银河',
+                'shape-helix': 'DNA',
+                'shape-torus': '环结',
+                'shape-heart': '爱心',
+                'shape-saturn': '土星',
+                'shape-cube': '矩阵',
+                'shape-flower': '花朵',
+                'shape-fireworks': '烟花',
+                'shape-sphere': '球体',
+                'color-label': '色彩主题 (COLOR SCHEME)',
+                'color-rainbow': '🌈 幻彩霓虹',
+                'color-cyberpunk': '🤖 赛博朋克',
+                'color-ocean': '🌊 深海幽蓝',
+                'color-fire': '🔥 烈焰熔岩',
+                'color-forest': '🌲 精灵森林',
+                'fullscreen-btn': '⛶ 沉浸模式',
+                'gesture-control-label': '手势控制:',
+                'gesture-control-text': '张开双手拉远距离，或张开单手五指，控制粒子扩散。'
+            },
+            'en': {
+                'page-title': 'AI Gesture-Controlled Particle System v2',
+                'loading': 'Initializing AI model and particles...',
+                'privacy-title': 'Privacy Statement',
+                'privacy-text': 'This application runs entirely in your browser locally. No data is uploaded to any server. Camera data is only used for local gesture recognition and is never recorded or transmitted.',
+                'privacy-accept': 'Got it',
+                'privacy-local': 'Local Only, Privacy Protected',
+                'control-title': 'Nebula Console',
+                'shape-label': 'Shape Selection',
+                'shape-galaxy': 'Galaxy',
+                'shape-helix': 'DNA',
+                'shape-torus': 'Torus',
+                'shape-heart': 'Heart',
+                'shape-saturn': 'Saturn',
+                'shape-cube': 'Matrix',
+                'shape-flower': 'Flower',
+                'shape-fireworks': 'Fireworks',
+                'shape-sphere': 'Sphere',
+                'color-label': 'Color Scheme',
+                'color-rainbow': '🌈 Rainbow',
+                'color-cyberpunk': '🤖 Cyberpunk',
+                'color-ocean': '🌊 Ocean',
+                'color-fire': '🔥 Fire',
+                'color-forest': '🌲 Forest',
+                'fullscreen-btn': '⛶ Fullscreen',
+                'gesture-control-label': 'Gesture Control:',
+                'gesture-control-text': 'Open both hands and spread them apart, or spread fingers of one hand to control particle dispersion.'
+            }
+        };
+
+        let currentLang = 'zh-CN';
+
+        function initI18n() {
+            const savedLang = localStorage.getItem('preferred-language');
+            const browserLang = navigator.language || navigator.userLanguage;
+            
+            if (savedLang) {
+                currentLang = savedLang;
+            } else if (browserLang.startsWith('en')) {
+                currentLang = 'en';
+            }
+
+            updateLanguage();
+            setupI18nUI();
+        }
+
+        function updateLanguage() {
+            document.documentElement.lang = currentLang;
+            const t = translations[currentLang];
+            
+            document.querySelectorAll('[data-i18n]').forEach(elem => {
+                const key = elem.getAttribute('data-i18n');
+                if (t[key]) {
+                    if (elem.tagName === 'INPUT' || elem.tagName === 'TEXTAREA') {
+                        elem.placeholder = t[key];
+                    } else if (elem.tagName === 'OPTION') {
+                        elem.textContent = t[key];
+                    } else {
+                        elem.textContent = t[key];
+                    }
+                }
+            });
+
+            document.title = t['page-title'];
+        }
+
+        function setupI18nUI() {
+            // Language toggle
+            const langBtn = document.getElementById('lang-toggle');
+            if (langBtn) {
+                langBtn.addEventListener('click', () => {
+                    currentLang = currentLang === 'zh-CN' ? 'en' : 'zh-CN';
+                    localStorage.setItem('preferred-language', currentLang);
+                    updateLanguage();
+                });
+            }
+
+            // Mobile menu toggle
+            const menuToggle = document.getElementById('menu-toggle');
+            const uiContainer = document.getElementById('ui-container');
+            if (menuToggle && uiContainer) {
+                menuToggle.addEventListener('click', () => {
+                    uiContainer.classList.toggle('collapsed');
+                });
+            }
+
+            // Privacy notice
+            const privacyNotice = document.getElementById('privacy-notice');
+            const privacyAccept = document.getElementById('privacy-accept');
+            
+            if (privacyAccept && privacyNotice) {
+                const hasAccepted = localStorage.getItem('privacy-accepted');
+                if (hasAccepted) {
+                    privacyNotice.classList.add('hidden');
+                }
+
+                privacyAccept.addEventListener('click', () => {
+                    localStorage.setItem('privacy-accepted', 'true');
+                    privacyNotice.classList.add('hidden');
+                });
+            }
+        }
+
+        // Initialize i18n
+        initI18n();
+
+        // ===== THREE.JS AND PARTICLES =====
         let scene, camera, renderer, particles, geometry, material;
-        // 增加粒子数量以获得更炫酷的效果
-        const particleCount = 20000; 
+        // 增加粒子数量以获得更炫酷的效果，但移动端减少数量以提升性能
+        const particleCount = window.innerWidth < 768 ? 10000 : 20000; 
         let targetPositions = [];
         let interactionFactor = 0;
         
