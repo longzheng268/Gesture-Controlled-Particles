@@ -121,7 +121,7 @@ const indexHTML = `<!DOCTYPE html>
 </body>
 </html>`;
 
-const stylesCSS = \`body { 
+const stylesCSS = `body { 
     margin: 0; 
     overflow: hidden; 
     background-color: #000; 
@@ -451,9 +451,9 @@ select#color-scheme {
     from { opacity: 0; }
     to { opacity: 1; }
 }
-\`;
+`;
 
-const i18nJS = \`// Internationalization module
+const i18nJS = `// Internationalization module
 const translations = {
     'zh-CN': {
         'page-title': 'AI 手势控制炫彩粒子系统 v2',
@@ -597,9 +597,9 @@ if (document.readyState === 'loading') {
 } else {
     initI18n();
 }
-\`;
+`;
 
-const particlesJS = \`// Particles module
+const particlesJS = `// Particles module
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
@@ -1012,9 +1012,9 @@ export function setupUI() {
 export function setInteractionFactor(value) {
     interactionFactor = value;
 }
-\`;
+`;
 
-const gesturesJS = \`// Gesture recognition module
+const gesturesJS = `// Gesture recognition module
 import { initThree, setupUI, setInteractionFactor } from '/js/particles.js';
 
 const videoElement = document.getElementById('input-video');
@@ -1025,7 +1025,7 @@ let currentInteractionFactor = 0;
 
 function initMediaPipe() {
     const hands = new Hands({
-        locateFile: (file) => \`https://cdn.jsdelivr.net/npm/@mediapipe/hands/\${file}\`
+        locateFile: (file) => \\\`https://cdn.jsdelivr.net/npm/@mediapipe/hands/\\\${file}\\\`
     });
     
     hands.setOptions({ 
@@ -1107,4 +1107,4 @@ function onHandsResults(results) {
 initThree();
 setupUI();
 initMediaPipe();
-\`;
+`;
